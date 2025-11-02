@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Course - College Database System</title>
+    <link rel="stylesheet" href="/style.css">
+    <script>
+        async function fetchCourses() {
+            const res = await fetch('/api/courses');
+            const data = await res.json();
+            const table = document.getElementById('course-table-body');
+            table.innerHTML = '';
+            data.forEach(course => {
+                const row = `<tr>
+                    <td>${course.CourseCode}</td>
+                    <td>${course.Name}</td>
+                    <td>${course.Credits}</td>
+                    <td>${course.DeptName}</td>
+                </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function addCourse(e) {
+            e.preventDefault();
+            const form = e.target;
+            const payload = {
+                courseCode: form.courseCode.value,
+                name: form.name.value,
+                credits: form.credits.value,
+                deptName: form.deptName.value
+            };
+            const res = await fetch('/api/courses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                alert('Course inserted successfully!');
+                form.reset();
+                fetchCourses();
+            } else {
+                const err = await res.json().catch(()=>({}));
+                alert('Error inserting course: ' + (err.error || res.status));
+            }
+        }
+
+        window.onload = fetchCourses;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>Add New Course</h2>
+        <form onsubmit="addCourse(event)">
+            <div class="form-group">
+                <label>Course Code</label>
+                <input type="text" name="courseCode" required>
+            </div>
+            <div class="form-group">
+                <label>Course Name</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Credits</label>
+                <input type="number" name="credits" required>
+            </div>
+            <div class="form-group">
+                <label>Department Name</label>
+                <input type="text" name="deptName" required>
+            </div>
+            <button type="submit" class="auth-btn">Add Course</button>
+        </form>
+        <h3>All Courses</h3>
+        <table style="width:100%;margin-top:20px;border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th>Course Code</th>
+                    <th>Name</th>
+                    <th>Credits</th>
+                    <th>Department Name</th>
+                </tr>
+            </thead>
+            <tbody id="course-table-body"></tbody>
+        </table>
+    </div>
+</body>
+</html>

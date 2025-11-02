@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curriculum - College Database System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="nav-bar">
+        <h1>CollegeDB</h1>
+        <div class="user-info">
+            <a href="/dashboard.html" class="nav-link">Dashboard</a>
+            <span id="user-name"></span>
+            <a href="/auth.html" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="page-container">
+        <div class="page-header">
+            <h2>Curriculum Management</h2>
+            <p>Assign courses and teachers to classes</p>
+        </div>
+
+        <div class="form-card">
+            <h3>Add/Update Curriculum</h3>
+            <form onsubmit="addCurriculum(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="classId">Class ID <span class="required">*</span></label>
+                        <input type="number" id="classId" name="classId" placeholder="Class ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="courseId">Course Code <span class="required">*</span></label>
+                        <input type="text" id="courseId" name="courseId" placeholder="e.g., CSE101" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="assignedTeacherId">Teacher ID <span class="required">*</span></label>
+                        <input type="number" id="assignedTeacherId" name="assignedTeacherId" placeholder="Teacher User ID" required>
+                    </div>
+                </div>
+                <button type="submit" class="auth-btn primary">Save Curriculum</button>
+            </form>
+        </div>
+
+        <div class="courses-table-wrapper">
+            <h3 style="margin-bottom: 20px; color: #2d3748;">All Curriculum</h3>
+            <div id="loading-message" style="text-align: center; padding: 40px; color: #718096;">
+                Loading curriculum...
+            </div>
+            <table style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Course</th>
+                        <th>Credits</th>
+                        <th>Department</th>
+                        <th>Assigned Teacher</th>
+                        <th>Teacher Email</th>
+                    </tr>
+                </thead>
+                <tbody id="curriculum-table-body"></tbody>
+            </table>
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <p>No curriculum found. Add a curriculum entry to get started.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/curriculum.js"></script>
+</body>
+</html>
+

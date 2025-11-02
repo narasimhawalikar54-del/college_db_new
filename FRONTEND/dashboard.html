@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - College Database System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="nav-bar">
+        <h1>CollegeDB</h1>
+        <div class="user-info">
+            <span id="user-name"></span>
+            <a href="/auth.html" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="page-container">
+        <div class="page-header">
+            <h2>Dashboard</h2>
+            <p>College Database Management System - Main Menu</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <a href="/courses.html" class="dashboard-card">
+                <div class="card-icon">📚</div>
+                <h3>Courses</h3>
+                <p>Manage courses and course details</p>
+            </a>
+
+            <a href="/classes.html" class="dashboard-card">
+                <div class="card-icon">🏫</div>
+                <h3>Classes</h3>
+                <p>Manage classes and semesters</p>
+            </a>
+
+            <a href="/teachers.html" class="dashboard-card">
+                <div class="card-icon">👨‍🏫</div>
+                <h3>Teachers</h3>
+                <p>Manage teacher information</p>
+            </a>
+
+            <a href="/students.html" class="dashboard-card">
+                <div class="card-icon">👨‍🎓</div>
+                <h3>Students</h3>
+                <p>Manage student information</p>
+            </a>
+
+            <a href="/lectures.html" class="dashboard-card">
+                <div class="card-icon">📝</div>
+                <h3>Lectures</h3>
+                <p>Schedule and manage lectures</p>
+            </a>
+
+            <a href="/attendance.html" class="dashboard-card">
+                <div class="card-icon">✅</div>
+                <h3>Attendance</h3>
+                <p>Track student attendance</p>
+            </a>
+
+            <a href="/assignments.html" class="dashboard-card">
+                <div class="card-icon">📋</div>
+                <h3>Assignments</h3>
+                <p>Manage assignments and deadlines</p>
+            </a>
+
+            <a href="/reports.html" class="dashboard-card">
+                <div class="card-icon">📊</div>
+                <h3>Reports</h3>
+                <p>View grades and performance</p>
+            </a>
+
+            <a href="/curriculum.html" class="dashboard-card">
+                <div class="card-icon">📖</div>
+                <h3>Curriculum</h3>
+                <p>Assign courses to classes and teachers</p>
+            </a>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
+

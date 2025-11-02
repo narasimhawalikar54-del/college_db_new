@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Class - College Database System</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        async function fetchClasses() {
+            const res = await fetch('http://localhost:3000/classes');
+            const data = await res.json();
+            const table = document.getElementById('class-table-body');
+            table.innerHTML = '';
+            data.forEach(cls => {
+                const row = `<tr>
+                    <td>${cls.ClassId}</td>
+                    <td>${cls.Sem}</td>
+                    <td>${cls.Branch}</td>
+                    <td>${cls.StartDate.slice(0,10)}</td>
+                    <td>${cls.EndDate.slice(0,10)}</td>
+                    <td>${cls.Degree}</td>
+                </tr>`;
+                table.innerHTML += row;
+            });
+        }
+        async function addClass(e) {
+            e.preventDefault();
+            const form = e.target;
+            const payload = {
+                sem: form.sem.value,
+                branch: form.branch.value,
+                startDate: form.startDate.value,
+                endDate: form.endDate.value,
+                degree: form.degree.value
+            };
+            const res = await fetch('http://localhost:3000/classes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                alert('Class inserted successfully!');
+                form.reset();
+                fetchClasses();
+            } else {
+                alert('Error inserting class.');
+            }
+        }
+        window.onload = fetchClasses;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>Add New Class</h2>
+        <form onsubmit="addClass(event)">
+            <div class="form-group">
+                <label>Semester</label>
+                <input type="number" name="sem" required>
+            </div>
+            <div class="form-group">
+                <label>Branch</label>
+                <input type="text" name="branch" required>
+            </div>
+            <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" name="startDate" required>
+            </div>
+            <div class="form-group">
+                <label>End Date</label>
+                <input type="date" name="endDate" required>
+            </div>
+            <div class="form-group">
+                <label>Degree</label>
+                <input type="text" name="degree" required>
+            </div>
+            <button type="submit" class="auth-btn">Add Class</button>
+        </form>
+        <h3>All Classes</h3>
+        <table style="width:100%;margin-top:20px;border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th>ClassId</th>
+                    <th>Semester</th>
+                    <th>Branch</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Degree</th>
+                </tr>
+            </thead>
+            <tbody id="class-table-body"></tbody>
+        </table>
+    </div>
+</body>
+</html>
+
+

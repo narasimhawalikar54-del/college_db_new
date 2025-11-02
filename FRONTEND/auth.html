@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In / Sign Up - College Database System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth-page">
+    <div class="auth-wrapper">
+        <div class="container" id="auth-container">
+            <div class="auth-header">
+                <h1 class="logo">CollegeDB</h1>
+                <h2 id="form-title">Sign In</h2>
+                <p id="form-subtitle">Welcome back! Please sign in to continue.</p>
+            </div>
+            
+            <div id="error-message" class="error-message" style="display:none;"></div>
+            <div id="success-message" class="success-message" style="display:none;"></div>
+
+            <form id="sign-in-form">
+                <div class="form-group">
+                    <label for="signin-email">Email</label>
+                    <input type="email" id="signin-email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signin-password">Password</label>
+                    <input type="password" id="signin-password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="auth-btn primary">Sign In</button>
+                <p class="switch-link">
+                    Don't have an account? <a href="#" onclick="showSignUp(); return false;">Sign Up</a>
+                </p>
+            </form>
+
+            <form id="sign-up-form" style="display:none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="signup-fname">First Name <span class="required">*</span></label>
+                        <input type="text" id="signup-fname" placeholder="First name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-minit">Middle Initial</label>
+                        <input type="text" id="signup-minit" placeholder="M" maxlength="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-lname">Last Name <span class="required">*</span></label>
+                        <input type="text" id="signup-lname" placeholder="Last name" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email <span class="required">*</span></label>
+                    <input type="email" id="signup-email" placeholder="your.email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password <span class="required">*</span></label>
+                    <input type="password" id="signup-password" placeholder="Create a password" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-role">Role <span class="required">*</span></label>
+                    <select id="signup-role" required>
+                        <option value="">Select role</option>
+                        <option value="Student">Student</option>
+                        <option value="Teacher">Teacher</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="signup-phone">Phone <span class="required">*</span></label>
+                    <input type="tel" id="signup-phone" placeholder="9876543210" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="signup-state">State <span class="required">*</span></label>
+                        <input type="text" id="signup-state" placeholder="State" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-city">City <span class="required">*</span></label>
+                        <input type="text" id="signup-city" placeholder="City" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-pincode">Pin Code <span class="required">*</span></label>
+                        <input type="text" id="signup-pincode" placeholder="123456" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-dob">Date of Birth <span class="required">*</span></label>
+                    <input type="date" id="signup-dob" required>
+                </div>
+                <button type="submit" class="auth-btn primary">Sign Up</button>
+                <p class="switch-link">
+                    Already have an account? <a href="#" onclick="showSignIn(); return false;">Sign In</a>
+                </p>
+            </form>
+        </div>
+    </div>
+    <script src="/js/auth.js"></script>
+</body>
+</html>

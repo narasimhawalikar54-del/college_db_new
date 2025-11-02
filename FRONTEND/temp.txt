@@ -1,0 +1,396 @@
+For Batch 3 Students:
+For the mini project, you have to connect your database to a new page in the frontend. Any changes made in either the frontend or the database should be reflected on both sides.
+
+You may use any framework.
+
+Each student must demonstrate the project on their own laptop on Monday. The task carries 5 marks.
+
+Connecting at least one table between the frontend and the database will be sufficient.
+
+Above is what they told to do for our project,
+So for our project i.e., waste track below are the userstories/ flow and tables that are created for your memory:
+
+user stories/flow:
+WasteTrack – Complete User Story
+🎯 Goal
+
+To digitize the waste collection and vehicle management process for a city by creating a centralized web platform that connects citizens, employees, and administrators, improving operational efficiency and transparency.
+
+🧑‍💻 Actors in the System
+
+Citizen/User
+
+Reports waste-related issues (e.g., uncollected garbage, overflowing bins).
+
+Provides complaint details such as name, location, type of issue, and description.
+
+Can track the complaint’s status (e.g., Pending, In Progress, Resolved).
+
+Administrator
+
+Manages employee and department details.
+
+Reviews new complaints.
+
+Assigns the complaint to a department (e.g., Waste Collection Department).
+
+Allocates a vehicle and employee (driver or cleaner) for that route.
+
+Monitors the progress of complaints and updates their resolution status.
+
+Employee (Driver / Cleaner / Technician)
+
+Logs in to view assigned routes or complaints.
+
+Updates the status (e.g., Reached site, Collection done, Resolved).
+
+Records departure and completion details.
+
+System (WasteTrack Database)
+
+Stores all user, employee, vehicle, department, route, and complaint data.
+
+Maintains relationships between employees, vehicles, and routes.
+
+Ensures accountability via timestamps and foreign key relations.
+
+⚙ Flow of Operations (Step-by-Step)
+🏙 1. Citizen Submits Complaint
+
+User fills a complaint form on the website (welcome.html or a separate complaint.html).
+
+Inputs: name, contact, location (area), type of issue, description, date.
+
+Complaint is stored in the Complaint table with a default status = “Pending”.
+
+🧾 2. Admin Reviews the Complaint
+
+Admin dashboard lists all complaints.
+
+Admin assigns the complaint to a Department (like Waste Collection or Recycling Unit).
+
+🚛 3. Department Takes Charge
+
+The assigned department checks which vehicle and employees are available.
+
+Through the Assigned_to table, the admin links an Employee and Vehicle.
+
+A route (in the Route table) corresponding to the complaint’s location is chosen.
+
+The vehicle is linked to that route via Serves table.
+
+🧍‍♂ 4. Employee Executes the Task
+
+Assigned employee logs in, sees the task (with location, vehicle ID, route).
+
+Employee departs (departure_from logged in Assigned_to).
+
+Once task is completed, status is updated to “Resolved”.
+
+📊 5. Citizen Can Track Progress
+
+The citizen can revisit the site and enter the complaint ID to track the current status.
+
+They may also view resolved history.
+
+🏁 6. Admin Verifies & Closes
+
+Admin verifies the completion via proof (photo or report).
+
+The complaint is marked as “Closed” and archived.
+
+📈 Result
+
+Efficient tracking of waste collection.
+
+Reduced manual coordination.
+
+Real-time accountability (who, when, where).
+
+Transparent complaint resolution for citizens.
+
+tables:
+-- Clean start
+
+DROP DATABASE IF EXISTS waste_track;
+CREATE DATABASE waste_track;
+USE waste_track;
+
+-- 1) Department (create without manager FK to avoid circular dependency)
+
+CREATE TABLE Department (
+
+dept_id INT AUTO_INCREMENT PRIMARY KEY,
+
+name VARCHAR(100) NOT NULL,
+
+manager_name VARCHAR(100),
+
+manager_id INT,                -- will add FK later
+
+email VARCHAR(100) UNIQUE,
+
+location VARCHAR(150)
+
+);
+
+-- 2) Employee
+
+CREATE TABLE Employee (
+
+emp_id INT AUTO_INCREMENT PRIMARY KEY,
+
+name VARCHAR(100) NOT NULL,
+
+DOB DATE,
+
+gender VARCHAR(10),
+
+salary DECIMAL(10,2),
+
+job_title VARCHAR(50),
+
+contact VARCHAR(15),
+
+address VARCHAR(255),
+
+dept_id INT,                   -- FK -> Department
+
+status VARCHAR(20),
+
+CONSTRAINT fk_employee_dept FOREIGN KEY (dept_id)
+
+    REFERENCES Department(dept_id)
+
+    ON UPDATE CASCADE
+
+    ON DELETE SET NULL
+
+);
+
+-- 3) Vehicle
+
+CREATE TABLE Vehicle (
+
+vehicle_id INT AUTO_INCREMENT PRIMARY KEY,
+
+vehicle_no VARCHAR(20) UNIQUE,
+
+dept_id INT,                   -- FK -> Department
+
+vehicle_type VARCHAR(50),
+
+capacity INT,
+
+serving_from DATE,
+
+status ENUM('Available','In Use','In Maintenance') DEFAULT 'Available',
+
+CONSTRAINT fk_vehicle_dept FOREIGN KEY (dept_id)
+
+    REFERENCES Department(dept_id)
+
+    ON UPDATE CASCADE
+
+    ON DELETE SET NULL
+
+);
+
+-- 4) Route
+
+CREATE TABLE Route (
+
+route_id INT AUTO_INCREMENT PRIMARY KEY,
+
+route_name VARCHAR(120),
+
+from_loc VARCHAR(100),
+
+to_loc VARCHAR(100),
+
+location VARCHAR(150),         -- optional single-location field if needed
+
+distance DECIMAL(6,2),
+
+estimated_dur TIME,
+
+fare DECIMAL(8,2)
+
+);
+
+-- 5) Assigned_To (relationship with attributes)
+
+CREATE TABLE Assigned_To (
+
+assign_id INT AUTO_INCREMENT PRIMARY KEY,
+
+emp_id INT NOT NULL,
+
+vehicle_id INT NOT NULL,
+
+route_id INT,                  -- optional link to route for this assignment
+
+departure_from VARCHAR(100),
+
+assign_date DATE DEFAULT (CURRENT_DATE),
+
+CONSTRAINT fk_assigned_emp FOREIGN KEY (emp_id)
+
+    REFERENCES Employee(emp_id)
+
+    ON UPDATE CASCADE
+
+    ON DELETE CASCADE,
+
+CONSTRAINT fk_assigned_vehicle FOREIGN KEY (vehicle_id)
+
+    REFERENCES Vehicle(vehicle_id)
+
+    ON UPDATE CASCADE
+
+    ON DELETE CASCADE,
+
+CONSTRAINT fk_assigned_route FOREIGN KEY (route_id)
+
+    REFERENCES Route(route_id)
+
+    ON UPDATE CASCADE
+
+    ON DELETE SET NULL
+
+);
+
+-- 6) Serves (Vehicle <-> Route) M:N bridge table
+
+CREATE TABLE Serves (
+
+vehicle_id INT NOT NULL,
+
+route_id INT NOT NULL,
+
+PRIMARY KEY (vehicle_id, route_id),
+
+CONSTRAINT fk_serves_vehicle FOREIGN KEY (vehicle_id)
+
+    REFERENCES Vehicle(vehicle_id)
+
+    ON UPDATE CASCADE
+
+    ON DELETE CASCADE,
+
+CONSTRAINT fk_serves_route FOREIGN KEY (route_id)
+
+    REFERENCES Route(route_id)
+
+    ON UPDATE CASCADE
+
+    ON DELETE CASCADE
+
+);
+
+-- 7) Waste_Record (waste collected per route / run)
+
+CREATE TABLE Waste_Record (
+
+record_id INT AUTO_INCREMENT PRIMARY KEY,
+
+route_id INT NOT NULL,
+
+waste_type VARCHAR(50),
+
+weight_kg DECIMAL(8,2),
+
+collection_date DATE DEFAULT (CURRENT_DATE),
+
+processed_status ENUM('Pending','In Transit','Processed') DEFAULT 'Pending',
+
+CONSTRAINT fk_waste_route FOREIGN KEY (route_id)
+
+    REFERENCES Route(route_id)
+
+    ON UPDATE CASCADE
+
+    ON DELETE CASCADE
+
+);
+
+-- 8) Complaints
+
+CREATE TABLE Complaints (
+
+complaint_id INT AUTO_INCREMENT PRIMARY KEY,
+
+citizen_name VARCHAR(100) NOT NULL,
+
+contact_no VARCHAR(15),
+
+location VARCHAR(150),
+
+description TEXT,
+
+route_id INT,                  -- optional link to Route
+
+assigned_emp INT,              -- optional link to the Employee handling it
+
+status ENUM('Open','In Progress','Resolved') DEFAULT 'Open',
+
+complaint_date DATE DEFAULT (CURRENT_DATE),
+
+CONSTRAINT fk_complaint_route FOREIGN KEY (route_id)
+
+    REFERENCES Route(route_id)
+
+    ON UPDATE CASCADE
+
+    ON DELETE SET NULL,
+
+CONSTRAINT fk_complaint_emp FOREIGN KEY (assigned_emp)
+
+    REFERENCES Employee(emp_id)
+
+    ON UPDATE CASCADE
+
+    ON DELETE SET NULL
+
+);
+
+-- 9) Now add the manager_id FK in Department (Employee exists now)
+
+ALTER TABLE Department
+
+ADD CONSTRAINT uq_department_manager UNIQUE (manager_id);
+
+ALTER TABLE Department
+
+ADD CONSTRAINT fk_department_manager
+
+FOREIGN KEY (manager_id) REFERENCES Employee(emp_id)
+
+ON UPDATE CASCADE
+
+ON DELETE SET NULL;
+
+So from the above things, you can like give me a webpage(frontend) in which it will take a user's input and add it into the table along with a popup message telling that the data has been inserted
+And along with that it should show the all the values that are in the inserted table.
+
+Following is the project dir:
+Source(dir)
+Under source it includes:
+{welcome.html
+Style.css
+Auth.html
+Back-end(empty dir)
+}
+
+So the webpage you can create it under source dir and for handling the user inputs and inserting those inputs to the table you can create a handler js in backend
+And btw mam hasn't told to bother with welcome and auth, integration with those will be given as other task next week so I just want a standalone webpage accepting user inputs and adding/inserting those to tables using a backend js program,
+
+What table to be used?
+You can take any appropriate tables for example like you gave earlier:
+Citizen/User
+Reports waste-related issues (e.g., uncollected garbage, overflowing bins).
+Provides complaint details such as name, location, type of issue, and description.
+Can track the complaint’s status (e.g., Pending, In Progress, Resolved).
+
+and also
+since I have created tables in MYSQL at:  mysql://root@localhost:3306/
