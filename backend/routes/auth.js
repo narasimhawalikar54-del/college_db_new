@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
-const bcrypt = require('bcryptjs'); // run: npm install bcryptjs --prefix backend
+const bcrypt = require('bcryptjs'); // You must run: npm install bcryptjs --prefix backend
 
 // Sign In
 router.post('/signin', async (req, res) => {
@@ -12,9 +12,8 @@ router.post('/signin', async (req, res) => {
     }
 
     try {
-        // use lowercase column names to match created schema
         const [users] = await db.query(
-            'SELECT userid, email, fname, lname, role, password FROM users WHERE email = ?',
+            'SELECT UserId, Email, FName, LName, Role, Password FROM USERS WHERE Email = ?',
             [email]
         );
         
@@ -25,7 +24,7 @@ router.post('/signin', async (req, res) => {
         const user = users[0];
         
         // Compare the provided password with the hashed password from the DB
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, user.Password);
 
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -35,44 +34,31 @@ router.post('/signin', async (req, res) => {
         res.json({ 
             token: 'dummy-token-' + Date.now(), // In production, use a real JWT
             user: {
-                id: user.userid,
-                email: user.email,
-                name: `${user.fname || ''} ${user.lname || ''}`.trim(),
-                role: user.role
+                id: user.UserId,
+                email: user.Email,
+                name: `${user.FName} ${user.LName}`,
+                role: user.Role
             }
         });
     } catch (err) {
-        console.error('Signin error:', err);
         res.status(500).json({ error: err.message });
     }
 });
 
 // Sign Up
 router.post('/signup', async (req, res) => {
-    // Accept either a single "name" or separate fname/lname fields from frontend
-    const { email, password, name, fName, fname, lName, lname, mInit, role, phone, state, city, pinCode, dob } = req.body;
+    const { email, password, fName, mInit, lName, role, phone, state, city, pinCode, dob } = req.body;
     
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
+    if (!email || !password || !fName || !lName || !role || !phone || !state || !city || !pinCode || !dob) {
+        return res.status(400).json({ error: 'All required fields must be provided' });
     }
 
-    // derive first/last names
-    let first = fname || fName || lname || lName ? (fname || fName || '') : '';
-    let last = lname || lName || '';
-    if (name && !first) {
-        const parts = String(name).trim().split(/\s+/);
-        first = parts.shift() || '';
-        last = parts.join(' ') || '';
-    }
-
-    const userRole = role || 'Student';
-
-    if (!['Student', 'Teacher', 'Admin'].includes(userRole)) {
+    if (!['Student', 'Teacher', 'Admin'].includes(role)) {
         return res.status(400).json({ error: 'Invalid role. Must be Student, Teacher, or Admin' });
     }
 
     try {
-        const [existing] = await db.query('SELECT email FROM users WHERE email = ?', [email]);
+        const [existing] = await db.query('SELECT Email FROM USERS WHERE Email = ?', [email]);
         if (existing.length > 0) {
             return res.status(409).json({ error: 'Email already exists' });
         }
@@ -81,11 +67,11 @@ router.post('/signup', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Insert user with the hashed password; use lowercase column names
+        // Insert user with the HASHED password
         const [result] = await db.query(
-            `INSERT INTO users (email, password, fname, minit, lname, role, phone, state, city, pincode, dob) 
+            `INSERT INTO USERS (Email, Password, FName, MInit, LName, Role, Phone, State, City, PinCode, DOB) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [email, hashedPassword, first || null, mInit || null, last || null, userRole, phone || null, state || null, city || null, pinCode || null, dob || null]
+            [email, hashedPassword, fName, mInit || null, lName, role, phone, state, city, pinCode, dob]
         );
 
         res.status(201).json({ 
@@ -94,7 +80,6 @@ router.post('/signup', async (req, res) => {
             message: 'User created successfully'
         });
     } catch (err) {
-        console.error('Signup error:', err);
         res.status(500).json({ error: err.message });
     }
 });

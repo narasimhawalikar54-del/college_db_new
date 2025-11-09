@@ -8,8 +8,8 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from the frontend directory (one level up)
-app.use(express.static(path.join(__dirname, '../frontend')));
+// Serve static files from the FRONTEND directory (one level up)
+app.use(express.static(path.join(__dirname, '../FRONTEND')));
 
 // API Routes - All routes are loaded from the './routes' directory
 const routes = [
@@ -22,17 +22,17 @@ const routes = [
     { path: '/api/attendance', file: './routes/attendance', name: 'Attendance' },
     { path: '/api/reports', file: './routes/reports', name: 'Reports' },
     { path: '/api/assignments', file: './routes/assignments', name: 'Assignments' },
-    { path: '/api/curriculum', file: './routes/curriculum', name: 'Curriculum' }
+    { path: '/api/curriculum', file: './routes/curriculum', name: 'Curriculum' },
+    // New route for your lecturer's complex views
+    { path: '/api/views', file: './routes/views', name: 'Views' } 
 ];
 
 routes.forEach(route => {
     try {
-        // require will throw if file missing
-        const router = require(route.file);
-        app.use(route.path, router);
-        console.log(`${route.name} routes loaded from ${route.file}`);
+        app.use(route.path, require(route.file));
+        console.log(`✓ ${route.name} routes loaded`);
     } catch (err) {
-        console.error(`Error loading ${route.name} routes from ${route.file}:`, err.message);
+        console.error(`✗ Error loading ${route.name} routes from ${route.file}:`, err.message);
     }
 });
 
@@ -41,7 +41,7 @@ app.get('/health', (req, res) => res.send('OK'));
 
 // Serve welcome page at root
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/welcome.html'));
+	res.sendFile(path.join(__dirname, '../FRONTEND/welcome.html'));
 });
 
 // 404 handler
@@ -49,20 +49,29 @@ app.use((req, res) => {
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ error: 'Not Found', path: req.originalUrl });
     }
-    res.status(404).sendFile(path.join(__dirname, '../frontend/welcome.html'));
+    // For any other 404, send the main welcome page
+	res.status(404).sendFile(path.join(__dirname, '../FRONTEND/welcome.html'));
 });
 
-const server = app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-    console.log(`Health check: http://localhost:${port}/health`);
-    console.log(`Frontend: http://localhost:${port}/`);
+app.listen(port, () => {
+	console.log(`✓ Server running on http://localhost:${port}`);
+	console.log(`✓ Health check: http://localhost:${port}/health`);
+	console.log(`✓ Frontend: http://localhost:${port}/`);
+}).on('error', (err) => {
+	if (err.code === 'EADDRINUSE') {
+		console.error(`✗ Port ${port} is already in use. Please stop other servers or use a different port.`);
+	} else {
+		console.error('✗ Server error:', err.message);
+	}
+	process.exit(1);
 });
 
-server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-        console.error(`Port ${port} is already in use. Please stop other servers or use a different port.`);
-    } else {
-        console.error('Server error:', err.message);
-    }
-    process.exit(1);
-});
+
+
+
+
+
+
+
+
+
