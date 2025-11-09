@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const bcrypt = require('bcryptjs'); // run: npm install bcryptjs --prefix backend
 
 // Sign In
 router.post('/signin', async (req, res) => {
@@ -11,56 +12,80 @@ router.post('/signin', async (req, res) => {
     }
 
     try {
+        // use lowercase column names to match created schema
         const [users] = await db.query(
-            'SELECT UserId, Email, FName, LName, Role FROM USERS WHERE Email = ? AND Password = ?',
-            [email, password]
+            'SELECT userid, email, fname, lname, role, password FROM users WHERE email = ?',
+            [email]
         );
         
-        if (users.length > 0) {
-            const user = users[0];
-            // In production, use proper JWT tokens with bcrypt for password hashing
-            res.json({ 
-                token: 'dummy-token-' + Date.now(),
-                user: {
-                    id: user.UserId,
-                    email: user.Email,
-                    name: `${user.FName} ${user.LName}`,
-                    role: user.Role
-                }
-            });
-        } else {
-            res.status(401).json({ error: 'Invalid credentials' });
+        if (users.length === 0) {
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
+
+        const user = users[0];
+        
+        // Compare the provided password with the hashed password from the DB
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        
+        // Passwords match. Send token and user info.
+        res.json({ 
+            token: 'dummy-token-' + Date.now(), // In production, use a real JWT
+            user: {
+                id: user.userid,
+                email: user.email,
+                name: `${user.fname || ''} ${user.lname || ''}`.trim(),
+                role: user.role
+            }
+        });
     } catch (err) {
+        console.error('Signin error:', err);
         res.status(500).json({ error: err.message });
     }
 });
 
 // Sign Up
 router.post('/signup', async (req, res) => {
-    const { email, password, fName, mInit, lName, role, phone, state, city, pinCode, dob } = req.body;
+    // Accept either a single "name" or separate fname/lname fields from frontend
+    const { email, password, name, fName, fname, lName, lname, mInit, role, phone, state, city, pinCode, dob } = req.body;
     
-    // Validation
-    if (!email || !password || !fName || !lName || !role || !phone || !state || !city || !pinCode || !dob) {
-        return res.status(400).json({ error: 'All required fields must be provided' });
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    if (!['Student', 'Teacher', 'Admin'].includes(role)) {
+    // derive first/last names
+    let first = fname || fName || lname || lName ? (fname || fName || '') : '';
+    let last = lname || lName || '';
+    if (name && !first) {
+        const parts = String(name).trim().split(/\s+/);
+        first = parts.shift() || '';
+        last = parts.join(' ') || '';
+    }
+
+    const userRole = role || 'Student';
+
+    if (!['Student', 'Teacher', 'Admin'].includes(userRole)) {
         return res.status(400).json({ error: 'Invalid role. Must be Student, Teacher, or Admin' });
     }
 
     try {
-        // Check if email already exists
-        const [existing] = await db.query('SELECT Email FROM USERS WHERE Email = ?', [email]);
+        const [existing] = await db.query('SELECT email FROM users WHERE email = ?', [email]);
         if (existing.length > 0) {
             return res.status(409).json({ error: 'Email already exists' });
         }
 
-        // Insert user
+        // Hash the password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Insert user with the hashed password; use lowercase column names
         const [result] = await db.query(
-            `INSERT INTO USERS (Email, Password, FName, MInit, LName, Role, Phone, State, City, PinCode, DOB) 
+            `INSERT INTO users (email, password, fname, minit, lname, role, phone, state, city, pincode, dob) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [email, password, fName, mInit || null, lName, role, phone, state, city, pinCode, dob]
+            [email, hashedPassword, first || null, mInit || null, last || null, userRole, phone || null, state || null, city || null, pinCode || null, dob || null]
         );
 
         res.status(201).json({ 
@@ -69,6 +94,7 @@ router.post('/signup', async (req, res) => {
             message: 'User created successfully'
         });
     } catch (err) {
+        console.error('Signup error:', err);
         res.status(500).json({ error: err.message });
     }
 });

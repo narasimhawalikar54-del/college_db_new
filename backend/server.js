@@ -8,10 +8,10 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from frontend directory
-app.use(express.static(path.join(__dirname, '../../FRONTEND')));
+// Serve static files from the frontend directory (one level up)
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// API Routes - with error handling
+// API Routes - All routes are loaded from the './routes' directory
 const routes = [
     { path: '/api/auth', file: './routes/auth', name: 'Auth' },
     { path: '/api/courses', file: './routes/courses', name: 'Courses' },
@@ -27,10 +27,12 @@ const routes = [
 
 routes.forEach(route => {
     try {
-        app.use(route.path, require(route.file));
-        console.log(`✓ ${route.name} routes loaded`);
+        // require will throw if file missing
+        const router = require(route.file);
+        app.use(route.path, router);
+        console.log(`${route.name} routes loaded from ${route.file}`);
     } catch (err) {
-        console.error(`✗ Error loading ${route.name} routes:`, err.message);
+        console.error(`Error loading ${route.name} routes from ${route.file}:`, err.message);
     }
 });
 
@@ -39,23 +41,28 @@ app.get('/health', (req, res) => res.send('OK'));
 
 // Serve welcome page at root
 app.get('/', (req, res) => {
-	res.sendFile(path.join(__dirname, '../../FRONTEND/welcome.html'));
+    res.sendFile(path.join(__dirname, '../frontend/welcome.html'));
 });
 
 // 404 handler
 app.use((req, res) => {
-	res.status(404).json({ error: 'Not Found', path: req.originalUrl });
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'Not Found', path: req.originalUrl });
+    }
+    res.status(404).sendFile(path.join(__dirname, '../frontend/welcome.html'));
 });
 
-app.listen(port, () => {
-	console.log(`✓ Server running on http://localhost:${port}`);
-	console.log(`✓ Health check: http://localhost:${port}/health`);
-	console.log(`✓ Frontend: http://localhost:${port}/`);
-}).on('error', (err) => {
-	if (err.code === 'EADDRINUSE') {
-		console.error(`✗ Port ${port} is already in use. Please stop other servers or use a different port.`);
-	} else {
-		console.error('✗ Server error:', err.message);
-	}
-	process.exit(1);
+const server = app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Health check: http://localhost:${port}/health`);
+    console.log(`Frontend: http://localhost:${port}/`);
+});
+
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`Port ${port} is already in use. Please stop other servers or use a different port.`);
+    } else {
+        console.error('Server error:', err.message);
+    }
+    process.exit(1);
 });
