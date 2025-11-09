@@ -10,6 +10,26 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+// Initialize Users table with correct schema
+async function initDb() {
+    try {
+        const [rows] = await pool.promise().query(`
+            CREATE TABLE IF NOT EXISTS Users (
+                userid INT PRIMARY KEY AUTO_INCREMENT,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('Users table initialized');
+    } catch (err) {
+        console.error('Error initializing database:', err);
+    }
+}
+
+initDb();
+
 // Test connection on startup and log errors
 pool.getConnection((err, conn) => {
     if (err) {
